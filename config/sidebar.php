@@ -14,13 +14,24 @@
 
    <!-- Divider -->
    <hr class="sidebar-divider my-0">
-
    <!-- Nav Item - Beranda -->
    <li class="nav-item <?= isset($home) ? 'active' : ''; ?>">
+
       <a class="nav-link" href="?#">
          <i class="fas fa-fw fa-home"></i>
          <span>Beranda</span></a>
    </li>
+
+
+
+   <li class="nav-item <?= isset($dashboard) ? 'active' : ''; ?>">
+      <a class="nav-link" href="?dashboard">
+         <i class="fas fa-chart-bar"></i>
+         <span>Dashboard Analytics</span>
+      </a>
+   </li>
+
+
 
    <!-- Divider -->
    <hr class="sidebar-divider">

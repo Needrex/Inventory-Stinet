@@ -1,0 +1,20 @@
+{
+    "name": "acer/inventory",
+    "autoload": {
+        "psr-4": {
+            "Acer\\Inventory\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Needrex",
+            "email": "needrex2k@gmail.com"
+        }
+    ],
+    "require": {
+        "setasign/fpdf": "^1.8",
+        "ext-gd": "*",
+        "ext-fileinfo": "*",
+        "phpoffice/phpspreadsheet": "^3.4"
+    }
+}

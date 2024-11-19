@@ -128,3 +128,88 @@ function base_url()
     $base_url .= str_replace(basename($_SERVER['SCRIPT_NAME']), "", $_SERVER['SCRIPT_NAME']);
     return $base_url;
 }
+
+#Dashboard Analytics Function
+function countDataUser()
+{
+    include('conn.php');
+    $tableName = 'users';
+    $query = mysqli_query($con, "SELECT COUNT(*) as total FROM " . mysqli_real_escape_string($con, $tableName));
+    $row = mysqli_fetch_assoc($query);
+    return $row['total'];
+}
+
+function countDataBarangMasuk()
+{
+    include('conn.php');
+    $tableName = 'barang_masuk';
+    $query = mysqli_query($con, "SELECT COUNT(*) as total FROM " . mysqli_real_escape_string($con, $tableName));
+    $row = mysqli_fetch_assoc($query);
+    return $row['total'];
+}
+
+function countDataBarangKeluar()
+{
+    include('conn.php');
+    $tableName = 'barang_keluar';
+    $query = mysqli_query($con, "SELECT COUNT(*) as total FROM " . mysqli_real_escape_string($con, $tableName));
+    $row = mysqli_fetch_assoc($query);
+    return $row['total'];
+}
+
+function countDataBarangTotal()
+{
+    include('conn.php');
+    $tableName = 'barang';
+    $query = mysqli_query($con, "SELECT COUNT(*) as total FROM " . mysqli_real_escape_string($con, $tableName));
+    $row = mysqli_fetch_assoc($query);
+    return $row['total'];
+}
+
+function getDataPerBulan($table)
+{
+    include('conn.php');
+    // Inisialisasi array 12 bulan dengan nilai 0
+    $hasil = array_fill(0, 12, 0);
+
+    $query = "SELECT MONTH(tanggal) as bulan, COUNT(*) as jumlah 
+             FROM $table 
+             WHERE YEAR(tanggal) = YEAR(CURRENT_DATE())
+             GROUP BY MONTH(tanggal)
+             ORDER BY MONTH(tanggal)";
+
+    $result = mysqli_query($con, $query);
+
+    // Mengisi array sesuai data yang ada
+    while ($row = mysqli_fetch_assoc($result)) {
+        $bulan = (int)$row['bulan'];
+        $hasil[$bulan - 1] = (int)$row['jumlah'];
+    }
+
+    return $hasil;
+}
+
+function getDataByRole()
+{
+    include('conn.php');
+    // Inisialisasi array dengan nilai 0
+    $hasil = array_fill(0, 2, 0); // array dengan 2 elemen [0,0]
+
+    $query = "SELECT level, COUNT(*) as jumlah 
+             FROM users 
+             GROUP BY level
+             ORDER BY FIELD(level, 'admin', 'user')";
+
+    $result = mysqli_query($con, $query);
+
+    // Mengisi array sesuai data
+    while ($row = mysqli_fetch_assoc($result)) {
+        if ($row['level'] == 'admin') {
+            $hasil[0] = (int)$row['jumlah'];
+        } else if ($row['level'] == 'user') {
+            $hasil[1] = (int)$row['jumlah'];
+        }
+    }
+
+    return $hasil;
+}

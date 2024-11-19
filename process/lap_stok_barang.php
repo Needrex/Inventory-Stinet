@@ -1,81 +1,73 @@
 <?php
-// session_start();
-include ('../config/conn.php');
-include ('../config/function.php');
-?>
-<html>
+require_once '../vendor/autoload.php'; // Pastikan sudah install PHPSpreadsheet
+include('../config/conn.php');
+include('../config/function.php');
 
-<head>
-    <style>
-    h2 {
-        padding: 0px;
-        margin: 0px;
-        font-size: 14pt;
-    }
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-    h4 {
-        font-size: 12pt;
-    }
 
-    text {
-        padding: 0px;
-    }
+// Buat object spreadsheet baru
+$spreadsheet = new Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
 
-    table {
-        border-collapse: collapse;
-        border: 1px solid #000;
-        font-size: 11pt;
-    }
+// Set judul
+$sheet->setCellValue('A1', 'LAPORAN STOK BARANG');
+$sheet->mergeCells('A1:F1');
 
-    th,
-    td {
-        border: 1px solid #000;
-        padding: 5px;
-    }
+// Header tabel
+$sheet->setCellValue('A3', 'NO');
+$sheet->setCellValue('B3', 'NAMA BARANG');
+$sheet->setCellValue('C3', 'MEREK');
+$sheet->setCellValue('D3', 'KATEGORI');
+$sheet->setCellValue('E3', 'KETERANGAN');
+$sheet->setCellValue('F3', 'STOK');
 
-    table.tab {
-        table-layout: auto;
-        width: 100%;
-    }
-    </style>
-    <title>Cetak Laporan Barang Masuk</title>
-</head>
+// Ambil data
+$query = mysqli_query($con, "SELECT x.*,x1.nama_merek,x2.nama_kategori 
+                               FROM barang x 
+                               JOIN merek x1 ON x1.idmerek=x.merek_id 
+                               JOIN kategori x2 ON x2.idkategori=x.kategori_id 
+                               ORDER BY x.idbarang DESC");
 
-<body>
-    <?php
-    $query = mysqli_query($con,"SELECT x.*,x1.nama_merek,x2.nama_kategori FROM barang x JOIN merek x1 ON x1.idmerek=x.merek_id JOIN kategori x2 ON x2.idkategori=x.kategori_id ORDER BY x.idbarang DESC")or die(mysqli_error($con));
-    
-    ?>
-    <div style="page-break-after:always;text-align:center;margin-top:5%;">
-        <div style="line-height:5px;">
-            <h2>LAPORAN STOK BARANG</h2>
-        </div>
-        <hr style="border-color:black;">
-        <table class="tab">
-            <tr>
-                <th width="20">NO</th>
-                <th>NAMA BARANG</th>
-                <th>MEREK</th>
-                <th>KATEGORI</th>
-                <th>KETERANGAN</th>
-                <th>STOK</th>
-            </tr>
-            <?php $n=1; while($row = mysqli_fetch_array($query)): ?>
-            <tr>
-                <td align="center"><?= $n++.'.'; ?></td>
-                <td><?= $row['nama_barang']; ?></td>
-                <td><?= $row['nama_merek']; ?></td>
-                <td><?= $row['nama_kategori']; ?></td>
-                <td><?= $row['keterangan']; ?></td>
-                <td><?= $row['stok']; ?></td>
-            </tr>
-            <?php endwhile; ?>
-        </table>
-    </div>
-</body>
+$row = 4;
+$no = 1;
+while ($data = mysqli_fetch_array($query)) {
+    $sheet->setCellValue('A' . $row, $no);
+    $sheet->setCellValue('B' . $row, $data['nama_barang']);
+    $sheet->setCellValue('C' . $row, $data['nama_merek']);
+    $sheet->setCellValue('D' . $row, $data['nama_kategori']);
+    $sheet->setCellValue('E' . $row, $data['keterangan']);
+    $sheet->setCellValue('F' . $row, $data['stok']);
+    $row++;
+    $no++;
+}
 
-</html>
+// Styling
+$sheet->getStyle('A1:F1')->getFont()->setBold(true);
+$sheet->getStyle('A3:F3')->getFont()->setBold(true);
+$sheet->getStyle('A1:F' . $row)->getAlignment()->setHorizontal('center');
 
-<script>
-window.print();
-</script>
+// Auto size kolom
+foreach (range('A', 'F') as $col) {
+    $sheet->getColumnDimension($col)->setAutoSize(true);
+}
+
+// Set border untuk tabel
+$styleArray = [
+    'borders' => [
+        'allBorders' => [
+            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+        ],
+    ],
+];
+$sheet->getStyle('A3:F' . ($row - 1))->applyFromArray($styleArray);
+
+// Output file
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment;filename="Laporan_Stok_Barang.xlsx"');
+header('Cache-Control: max-age=0');
+
+$writer = new Xlsx($spreadsheet);
+$writer->save('php://output');
+exit;
